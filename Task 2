@@ -1,0 +1,112 @@
+# Advanced Data Handling using CSV, JSON, and File I/O
+
+import csv
+import json
+import os
+
+
+class DataProcessor:
+    def __init__(self, input_csv, output_csv, output_json):
+        self.input_csv = input_csv
+        self.output_csv = output_csv
+        self.output_json = output_json
+        self.data = []
+
+    # Read CSV File
+    def read_csv(self):
+        try:
+            with open(self.input_csv, mode='r', newline='', encoding='utf-8') as file:
+                reader = csv.DictReader(file)
+                self.data = list(reader)
+            print("CSV file loaded successfully.")
+        except FileNotFoundError:
+            print("Input CSV file not found.")
+
+    # Data Cleaning
+    def clean_data(self):
+        cleaned = []
+        seen = set()
+
+        for row in self.data:
+            # Remove rows with missing values
+            if "" in row.values():
+                continue
+
+            # Remove duplicate records using ID
+            if row["ID"] not in seen:
+                seen.add(row["ID"])
+                cleaned.append(row)
+
+        self.data = cleaned
+        print("Data cleaned successfully.")
+
+    # Data Transformation
+    def transform_data(self):
+        for row in self.data:
+            row["Name"] = row["Name"].title()
+            row["Department"] = row["Department"].upper()
+            row["Salary"] = str(float(row["Salary"]) * 1.10)  # 10% salary increment
+
+        print("Data transformed successfully.")
+
+    # Save as CSV
+    def save_csv(self):
+        if not self.data:
+            return
+
+        with open(self.output_csv, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.DictWriter(file, fieldnames=self.data[0].keys())
+            writer.writeheader()
+            writer.writerows(self.data)
+
+        print("Processed data saved to CSV.")
+
+    # Save as JSON
+    def save_json(self):
+        with open(self.output_json, mode='w', encoding='utf-8') as file:
+            json.dump(self.data, file, indent=4)
+
+        print("Processed data saved to JSON.")
+
+    # Display Data
+    def display(self):
+        print("\nProcessed Data")
+        print("-" * 50)
+        for row in self.data:
+            print(row)
+
+
+# -------------------- Main Program --------------------
+
+def create_sample_csv(filename):
+    """Creates a sample CSV file if it doesn't exist."""
+    if not os.path.exists(filename):
+        with open(filename, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(["ID", "Name", "Department", "Salary"])
+            writer.writerow([1, "john", "sales", 30000])
+            writer.writerow([2, "alice", "hr", 35000])
+            writer.writerow([3, "", "finance", 40000])     # Missing value
+            writer.writerow([2, "alice", "hr", 35000])     # Duplicate
+            writer.writerow([4, "mike", "it", 45000])
+
+
+def main():
+    input_csv = "employees.csv"
+    output_csv = "processed_employees.csv"
+    output_json = "processed_employees.json"
+
+    create_sample_csv(input_csv)
+
+    processor = DataProcessor(input_csv, output_csv, output_json)
+
+    processor.read_csv()
+    processor.clean_data()
+    processor.transform_data()
+    processor.display()
+    processor.save_csv()
+    processor.save_json()
+
+
+if __name__ == "__main__":
+    main()
